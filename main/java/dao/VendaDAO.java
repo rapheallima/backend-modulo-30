@@ -26,9 +26,7 @@ import exceptions.MaisDeUmRegistroException;
 import exceptions.TableException;
 import exceptions.TipoChaveNaoEncontradaException;
 
-
 public class VendaDAO extends GenericDAO<Venda, String> implements IVendaDAO {
-	
 
 	@Override
 	public Class<Venda> getTipoClasse() {
@@ -48,36 +46,36 @@ public class VendaDAO extends GenericDAO<Venda, String> implements IVendaDAO {
 
 	@Override
 	public void finalizarVenda(Venda venda) throws TipoChaveNaoEncontradaException, DAOException {
-		
+
 		Connection connection = null;
-    	PreparedStatement stm = null;
-    	try {
-    		String sql = "UPDATE TB_VENDA SET STATUS_VENDA = ? WHERE ID = ?";
-    		connection = getConnection();
+		PreparedStatement stm = null;
+		try {
+			String sql = "UPDATE TB_VENDA SET STATUS_VENDA = ? WHERE ID = ?";
+			connection = getConnection();
 			stm = connection.prepareStatement(sql);
 			stm.setString(1, Status.CONCLUIDA.name());
 			stm.setLong(2, venda.getId());
 			stm.executeUpdate();
-			
+
 		} catch (SQLException e) {
 			throw new DAOException("ERRO ATUALIZANDO OBJETO ", e);
 		} finally {
 			closeConnection(connection, stm, null);
 		}
 	}
-	
+
 	@Override
 	public void cancelarVenda(Venda venda) throws TipoChaveNaoEncontradaException, DAOException {
 		Connection connection = null;
-    	PreparedStatement stm = null;
-    	try {
-    		String sql = "UPDATE TB_VENDA SET STATUS_VENDA = ? WHERE ID = ?";
-    		connection = getConnection();
+		PreparedStatement stm = null;
+		try {
+			String sql = "UPDATE TB_VENDA SET STATUS_VENDA = ? WHERE ID = ?";
+			connection = getConnection();
 			stm = connection.prepareStatement(sql);
 			stm.setString(1, Status.CANCELADA.name());
 			stm.setLong(2, venda.getId());
 			stm.executeUpdate();
-			
+
 		} catch (SQLException e) {
 			throw new DAOException("ERRO ATUALIZANDO OBJETO ", e);
 		} finally {
@@ -127,99 +125,94 @@ public class VendaDAO extends GenericDAO<Venda, String> implements IVendaDAO {
 	protected void setParametrosQuerySelect(PreparedStatement stm, String valor) throws SQLException {
 		stm.setString(1, valor);
 	}
-	
-	
 
 	@Override
 	public Venda consultar(String valor) throws MaisDeUmRegistroException, TableException, DAOException {
-		//TODO pode ser feito desta forma
+		// TODO pode ser feito desta forma
 //		Venda venda = super.consultar(valor);
 //		Cliente cliente = clienteDAO.consultar(venda.getCliente().getId());
 //		venda.setCliente(cliente);
 //		return venda;
-		
-		//TODO Ou pode ser feito com join
+
+		// TODO Ou pode ser feito com join
 		StringBuilder sb = sqlBaseSelect();
 		sb.append("WHERE V.CODIGO = ? ");
 		Connection connection = null;
 		PreparedStatement stm = null;
 		ResultSet rs = null;
 		try {
-    		//validarMaisDeUmRegistro();
-    		connection = getConnection();
+			// validarMaisDeUmRegistro();
+			connection = getConnection();
 			stm = connection.prepareStatement(sb.toString());
 			setParametrosQuerySelect(stm, valor);
 			rs = stm.executeQuery();
-		    if (rs.next()) {
-		    	Venda venda = VendaFactory.convert(rs);
-		    	buscarAssociacaoVendaProdutos(connection, venda);
-		    	return venda;
-		    }
-		    
+			if (rs.next()) {
+				Venda venda = VendaFactory.convert(rs);
+				buscarAssociacaoVendaProdutos(connection, venda);
+				return venda;
+			}
+
 		} catch (SQLException e) {
 			throw new DAOException("ERRO CONSULTANDO OBJETO ", e);
 		} finally {
 			closeConnection(connection, stm, rs);
 		}
-    	return null;
-		
+		return null;
+
 	}
 
-	private void buscarAssociacaoVendaProdutos(Connection connection, Venda venda)
-			throws DAOException {
+	private void buscarAssociacaoVendaProdutos(Connection connection, Venda venda) throws DAOException {
 		PreparedStatement stmProd = null;
 		ResultSet rsProd = null;
 		try {
 			StringBuilder sbProd = new StringBuilder();
-		    sbProd.append("SELECT PQ.ID, PQ.QUANTIDADE, PQ.VALOR_TOTAL, ");
-		    sbProd.append("P.ID AS ID_PRODUTO, P.CODIGO, P.NOME, P.DESCRICAO, P.VALOR ");
-		    sbProd.append("FROM TB_PRODUTO_QUANTIDADE PQ ");
-		    sbProd.append("INNER JOIN TB_PRODUTO P ON P.ID = PQ.ID_PRODUTO_FK ");
-		    sbProd.append("WHERE PQ.ID_VENDA_FK = ?");
-		    stmProd = connection.prepareStatement(sbProd.toString());
-		    stmProd.setLong(1, venda.getId());
-		    rsProd = stmProd.executeQuery();
-		    Set<ProdutoQuantidade> produtos = new HashSet<>();
-		    while(rsProd.next()) {
-		    	ProdutoQuantidade prodQ = ProdutoQuantidadeFactory.convert(rsProd);
-		    	produtos.add(prodQ);
-		    }
-		    venda.setProdutos(produtos);
-		    venda.recalcularValorTotalVenda();
+			sbProd.append("SELECT PQ.ID, PQ.QUANTIDADE, PQ.VALOR_TOTAL, ");
+			sbProd.append("P.ID AS ID_PRODUTO, P.CODIGO, P.NOME, P.DESCRICAO, P.VALOR, P.MODELO ");
+			sbProd.append("FROM TB_PRODUTO_QUANTIDADE PQ ");
+			sbProd.append("INNER JOIN TB_PRODUTO P ON P.ID = PQ.ID_PRODUTO_FK ");
+			sbProd.append("WHERE PQ.ID_VENDA_FK = ?");
+			stmProd = connection.prepareStatement(sbProd.toString());
+			stmProd.setLong(1, venda.getId());
+			rsProd = stmProd.executeQuery();
+			Set<ProdutoQuantidade> produtos = new HashSet<>();
+			while (rsProd.next()) {
+				ProdutoQuantidade prodQ = ProdutoQuantidadeFactory.convert(rsProd);
+				produtos.add(prodQ);
+			}
+			venda.setProdutos(produtos);
+			venda.recalcularValorTotalVenda();
 		} catch (SQLException e) {
 			throw new DAOException("ERRO CONSULTANDO OBJETO ", e);
 		} finally {
 			closeConnection(connection, stmProd, rsProd);
 		}
 	}
-	
-	
 
 	@Override
 	public Collection<Venda> buscarTodos() throws DAOException {
 		List<Venda> lista = new ArrayList<>();
 		StringBuilder sb = sqlBaseSelect();
-		
+
 		try {
-    		Connection connection = getConnection();
+			Connection connection = getConnection();
 			PreparedStatement stm = connection.prepareStatement(sb.toString());
 			ResultSet rs = stm.executeQuery();
-		    while (rs.next()) {
-		    	Venda venda = VendaFactory.convert(rs);
-		    	buscarAssociacaoVendaProdutos(connection, venda);
-		    	lista.add(venda);
-		    }
-		    
+			while (rs.next()) {
+				Venda venda = VendaFactory.convert(rs);
+				buscarAssociacaoVendaProdutos(connection, venda);
+				lista.add(venda);
+			}
+
 		} catch (SQLException e) {
 			throw new DAOException("ERRO CONSULTANDO OBJETO ", e);
-		} 
-    	return lista;
+		}
+		return lista;
 	}
 
 	private StringBuilder sqlBaseSelect() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT V.ID AS ID_VENDA, V.CODIGO, V.VALOR_TOTAL, V.DATA_VENDA, V.STATUS_VENDA, ");
-		sb.append("C.ID AS ID_CLIENTE, C.NOME, C.CPF, C.TEL, C.ENDERECO, C.NUMERO, C.CIDADE, C.ESTADO ");
+		sb.append("C.ID AS ID_CLIENTE, C.NOME, C.CPF, C.TEL, C.ENDERECO, C.NUMERO, C.CIDADE, C.ESTADO, C.EMAIL ");
 		sb.append("FROM TB_VENDA V ");
 		sb.append("INNER JOIN TB_CLIENTE C ON V.ID_CLIENTE_FK = C.ID ");
 		return sb;
@@ -266,8 +259,9 @@ public class VendaDAO extends GenericDAO<Venda, String> implements IVendaDAO {
 		sb.append("VALUES (nextval('sq_produto_quantidade'),?,?,?,?)");
 		return sb.toString();
 	}
-	
-	private void setParametrosQueryInsercaoProdQuant(PreparedStatement stm, Venda venda, ProdutoQuantidade prod) throws SQLException {
+
+	private void setParametrosQueryInsercaoProdQuant(PreparedStatement stm, Venda venda, ProdutoQuantidade prod)
+			throws SQLException {
 		stm.setLong(1, prod.getProduto().getId());
 		stm.setLong(2, venda.getId());
 		stm.setInt(3, prod.getQuantidade());

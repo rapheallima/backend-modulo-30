@@ -8,10 +8,8 @@ import java.sql.SQLException;
 
 import domain.Produto;
 
-
 public class ProdutoFactory {
 
-	
 	public static Produto convert(ResultSet rs) throws SQLException {
 		Produto prod = new Produto();
 		prod.setId(rs.getLong("ID_PRODUTO"));
@@ -19,6 +17,7 @@ public class ProdutoFactory {
 		prod.setNome(rs.getString("NOME"));
 		prod.setDescricao(rs.getString("DESCRICAO"));
 		prod.setValor(rs.getBigDecimal("VALOR"));
+		prod.setModelo(rs.getString("MODELO"));
 		return prod;
 	}
 }

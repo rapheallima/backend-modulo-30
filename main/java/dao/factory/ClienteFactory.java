@@ -8,7 +8,6 @@ import java.sql.SQLException;
 
 import domain.Cliente;
 
-
 public class ClienteFactory {
 
 	public static Cliente convert(ResultSet rs) throws SQLException {
@@ -21,6 +20,7 @@ public class ClienteFactory {
 		cliente.setNumero(rs.getInt(("NUMERO")));
 		cliente.setCidade(rs.getString(("CIDADE")));
 		cliente.setEstado(rs.getString(("ESTADO")));
+		cliente.setEmail(rs.getString(("EMAIL")));
 		return cliente;
 	}
 }

@@ -121,7 +121,6 @@ public class VendaDAOTest {
 	@Test
 	public void adicionarMaisProdutosDoMesmo()
 			throws TipoChaveNaoEncontradaException, MaisDeUmRegistroException, TableException, DAOException {
-		System.out.println("Entrando no método adicionarMaisProdutosDoMesmo");
 		String codigoVenda = "A4";
 		Venda venda = criarVenda(codigoVenda);
 		Boolean retorno = vendaDao.cadastrar(venda);
@@ -129,17 +128,13 @@ public class VendaDAOTest {
 		assertNotNull(venda);
 		assertEquals(codigoVenda, venda.getCodigo());
 
-		// Adicionar mais 2 unidades do mesmo produto (totalizando 3)
-		venda.adicionarProduto(produto, 1); // Já são 2, vamos adicionar mais 1
-		venda.adicionarProduto(produto, 1); // Agora, totalizando 3
+		Venda vendaConsultada = vendaDao.consultar(codigoVenda);
+		vendaConsultada.adicionarProduto(produto, 1);
 
-		assertTrue(venda.getQuantidadeTotalProdutos() == 3);
+		assertTrue(vendaConsultada.getQuantidadeTotalProdutos() == 3);
 		BigDecimal valorTotal = BigDecimal.valueOf(30).setScale(2, RoundingMode.HALF_DOWN);
-		assertTrue(venda.getValorTotal().compareTo(valorTotal) == 0);
-		assertTrue(venda.getStatus().equals(Status.INICIADA));
-		System.out.println("Status esperado: " + Status.INICIADA);
-		System.out.println("Status retornado: " + venda.getStatus());
-
+		assertTrue(vendaConsultada.getValorTotal().equals(valorTotal));
+		assertTrue(vendaConsultada.getStatus().equals(Status.INICIADA));
 	}
 
 	@Test
@@ -163,6 +158,17 @@ public class VendaDAOTest {
 		BigDecimal valorTotal = BigDecimal.valueOf(70).setScale(2, RoundingMode.HALF_DOWN);
 		assertTrue(vendaConsultada.getValorTotal().equals(valorTotal));
 		assertTrue(vendaConsultada.getStatus().equals(Status.INICIADA));
+	}
+
+	@Test(expected = DAOException.class)
+	public void salvarVendaMesmoCodigoExistente() throws TipoChaveNaoEncontradaException, DAOException {
+		Venda venda = criarVenda("A6");
+		Boolean retorno = vendaDao.cadastrar(venda);
+		assertTrue(retorno);
+
+		Boolean retorno1 = vendaDao.cadastrar(venda);
+		assertFalse(retorno1);
+		assertTrue(venda.getStatus().equals(Status.INICIADA));
 	}
 
 	@Test
@@ -288,6 +294,7 @@ public class VendaDAOTest {
 		produto.setDescricao("Produto 1");
 		produto.setNome("Produto 1");
 		produto.setValor(valor);
+		produto.setModelo("A");
 		produtoDao.cadastrar(produto);
 		return produto;
 	}
@@ -295,12 +302,13 @@ public class VendaDAOTest {
 	private Cliente cadastrarCliente() throws TipoChaveNaoEncontradaException, DAOException {
 		Cliente cliente = new Cliente();
 		cliente.setCpf(12312312312L);
-		cliente.setNome("Rodrigo");
+		cliente.setNome("Raphael");
 		cliente.setCidade("São Paulo");
 		cliente.setEnd("End");
 		cliente.setEstado("SP");
 		cliente.setNumero(10);
 		cliente.setTel(1199999999L);
+		cliente.setEmail("Raphael@gmail");
 		clienteDao.cadastrar(cliente);
 		return cliente;
 	}

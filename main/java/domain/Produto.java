@@ -10,25 +10,35 @@ import anotacao.Tabela;
 import anotacao.TipoChave;
 import dao.Persistente;
 
-
 @Tabela("TB_PRODUTO")
 public class Produto implements Persistente {
-	
+
 	@ColunaTabela(dbName = "id", setJavaName = "setId")
 	private Long id;
 
 	@TipoChave("getCodigo")
 	@ColunaTabela(dbName = "codigo", setJavaName = "setCodigo")
 	private String codigo;
-	
+
 	@ColunaTabela(dbName = "nome", setJavaName = "setNome")
 	private String nome;
-	
+
 	@ColunaTabela(dbName = "descricao", setJavaName = "setDescricao")
 	private String descricao;
-	
+
 	@ColunaTabela(dbName = "valor", setJavaName = "setValor")
 	private BigDecimal valor;
+
+	@ColunaTabela(dbName = "modelo", setJavaName = "setModelo")
+	private String modelo;
+
+	public String getModelo() {
+		return modelo;
+	}
+
+	public void setModelo(String modelo) {
+		this.modelo = modelo;
+	}
 
 	public String getCodigo() {
 		return codigo;
@@ -69,5 +79,5 @@ public class Produto implements Persistente {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 }
